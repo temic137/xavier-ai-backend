@@ -598,36 +598,84 @@ def transcribe_audio_file(file_path):
 #         return jsonify({"error": "An error occurred while saving the feedback"}), 500
 
 
-@chatbot_bp.route('/feedback/<chatbot_id>', methods=['POST'])
-def create_feedback(chatbot_id):
-    data = request.json
+
+
+
+# @chatbot_bp.route('/feedback/<chatbot_id>', methods=['POST'])
+# def create_feedback(chatbot_id):
+#     data = request.json
     
-    # Ensure the required fields are present
-    if not all(field in data for field in ['feedback']):
-        return jsonify({"error": "Missing required fields"}), 400
+#     # Ensure the required fields are present
+#     if not all(field in data for field in ['feedback']):
+#         return jsonify({"error": "Missing required fields"}), 400
 
-    # Use default user_id like in the ticket route
-    user_id = data.get('user_id', '4269')
+#     # Use default user_id like in the ticket route
+#     user_id = data.get('user_id', '4269')
 
-    # Create the feedback object
-    new_feedback = Feedback(
-        user_id=user_id,
-        chatbot_id=chatbot_id,
-        feedback=data['feedback'],
-        created_at=datetime.utcnow()
-    )
+#     # Create the feedback object
+#     new_feedback = Feedback(
+#         user_id=user_id,
+#         chatbot_id=chatbot_id,
+#         feedback=data['feedback'],
+#         created_at=datetime.utcnow()
+#     )
+
+#     try:
+#         db.session.add(new_feedback)
+#         db.session.commit()
+#         return jsonify({
+#             "message": "Feedback created successfully",
+#             "feedback_id": new_feedback.id
+#         }), 201
+#     except SQLAlchemyError as e:
+#         db.session.rollback()
+#         current_app.logger.error(f"Database error in create_feedback: {str(e)}")
+#         return jsonify({"error": "An error occurred while creating the feedback"}), 500
+
+
+
+@chatbot_bp.route('/chatbot/<chatbot_id>/feedback', methods=['POST', 'OPTIONS'])
+def submit_feedback(chatbot_id):
+    if request.method == 'OPTIONS':
+        return '', 204
+    
+    chatbot = Chatbot.query.get(chatbot_id)
+    if not chatbot:
+        return jsonify({"error": "Chatbot not found"}), 404
+
+    data = request.json
+    feedback_text = data.get('feedback')
+    # user_id = request.headers.get('User-ID')
+    user_id = request.headers.get('User-ID', '4269')  # Retrieve the user ID
+
+    user_id = data.get('user_id')  # Assume user provides their user_id in the request
+    if not user_id:
+        # If no user_id is provided, create a temporary user_id (or a placeholder, like "guest")
+        user_id = '4269'
+    if not feedback_text:
+        return "Feedback is missing", 400
+
+    if not feedback_text:
+        return jsonify({"error": "No feedback provided"}), 400
+    if not user_id:
+        return jsonify({"error": "User ID is missing"}), 400  # Ensure User-ID is present
 
     try:
+        new_feedback = Feedback(
+            chatbot_id=chatbot_id,
+            user_id=4269,  # Ensure this is an integer or correct type as per your DB schema
+            feedback=feedback_text,
+            created_at=datetime.utcnow()
+        )
         db.session.add(new_feedback)
         db.session.commit()
-        return jsonify({
-            "message": "Feedback created successfully",
-            "feedback_id": new_feedback.id
-        }), 201
+        return jsonify({"message": "Feedback submitted successfully"}), 200
     except SQLAlchemyError as e:
         db.session.rollback()
-        current_app.logger.error(f"Database error in create_feedback: {str(e)}")
-        return jsonify({"error": "An error occurred while creating the feedback"}), 500
+        current_app.logger.error(f"Database error in submit_feedback: {str(e)}")
+        return jsonify({"error": "An error occurred while saving the feedback"}), 500
+
+
 
 
 @chatbot_bp.route('/chatbot/<chatbot_id>/feedback', methods=['GET'])
