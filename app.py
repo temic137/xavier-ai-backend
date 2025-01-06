@@ -104,7 +104,7 @@ def create_app():
          resources={r"/*": {
              "origins": [
                  "https://xavierai.vercel.app",
-                 "http://localhost:4200"
+                 # "http://localhost:4200"
              ],
              "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS","PATCH"],
              "allow_headers": ["Content-Type", "Authorization", "X-CSRFToken","User-ID"],
