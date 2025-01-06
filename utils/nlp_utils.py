@@ -387,7 +387,8 @@ Additional Guidance:
         ]
 
         response = huggingface_client.chat.completions.create(
-            model="HuggingFaceH4/zephyr-7b-beta",
+            # model="HuggingFaceH4/zephyr-7b-beta",
+            model="mistralai/Mistral-7B-Instruct-v0.2",
             messages=messages,
             temperature=0.0,
             max_tokens=500
