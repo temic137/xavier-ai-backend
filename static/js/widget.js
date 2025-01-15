@@ -99,11 +99,76 @@
             gap: 4px;
         }
 
+        .chatbot-header-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
         .chatbot-header-actions {
             display: flex;
             flex-direction: column;
             gap: 8px;
             margin-top: 4px;
+        }
+
+        .chatbot-header-actions-button {
+            background: none;
+            border: none;
+            color: #FFFFFF;
+            cursor: pointer;
+            padding: 8px;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+        }
+
+        .chatbot-header-actions-button:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .chatbot-dropdown-menu {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 100%;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            min-width: 160px;
+            z-index: 1000;
+            margin-top: 4px;
+        }
+
+        .chatbot-dropdown-menu.show {
+            display: block;
+        }
+
+        .chatbot-dropdown-item {
+            padding: 12px 16px;
+            color: #333;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+            font-size: 14px;
+        }
+
+        .chatbot-dropdown-item:hover {
+            background: #f5f5f5;
+        }
+
+        .chatbot-dropdown-item:first-child {
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+        }
+
+        .chatbot-dropdown-item:last-child {
+            border-bottom-left-radius: 8px;
+            border-bottom-right-radius: 8px;
         }
 
         .chatbot-feedback-trigger {
@@ -520,16 +585,28 @@
                         </div>
                     </div>
                 
-                    <div class="chatbot-header-actions">
-                        <button class="chatbot-feedback-trigger" onclick="window.chatbotWidget.openTicketForm()">
+                        <div class="chatbot-header-actions">
+                <div class="chatbot-header-dropdown">
+                    <button class="chatbot-header-actions-button" onclick="window.chatbotWidget.toggleDropdown()">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="3" y1="12" x2="21" y2="12"></line>
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <line x1="3" y1="18" x2="21" y2="18"></line>
+                        </svg>
+                    </button>
+                    <div id="chatbot-dropdown-menu" class="chatbot-dropdown-menu">
+                        <button class="chatbot-dropdown-item" onclick="window.chatbotWidget.openTicketForm()">
                             <span>Create Ticket</span>
                             <span>🎫</span>
                         </button>
-                        <button class="chatbot-feedback-trigger" onclick="window.chatbotWidget.openFeedback()">
+                        <button class="chatbot-dropdown-item" onclick="window.chatbotWidget.openFeedback()">
                             <span>Feedback</span>
                             <span>💬</span>
                         </button>
                     </div>
+                </div>
+
+            </div>
                     
                     <button class="chatbot-close-chat" onclick="window.chatbotWidget.toggle()">×</button>
                 </div>
@@ -620,6 +697,24 @@
             
             if (content.classList.contains('chatbot-visible')) {
                 document.getElementById('chatbot-input').focus();
+            }
+        },
+        toggleDropdown() {
+            const dropdown = document.getElementById('chatbot-dropdown-menu');
+            dropdown.classList.toggle('show');
+
+            // Close dropdown when clicking outside
+            const closeDropdown = (event) => {
+                if (!event.target.matches('.chatbot-header-actions-button')) {
+                    dropdown.classList.remove('show');
+                    document.removeEventListener('click', closeDropdown);
+                }
+            };
+
+            if (dropdown.classList.contains('show')) {
+                setTimeout(() => {
+                    document.addEventListener('click', closeDropdown);
+                }, 0);
             }
         },
 
@@ -748,6 +843,7 @@
             document.getElementById('chatbot-ticket-form').classList.add('chatbot-visible');
         },
 
+        
         closeTicketForm() {
             document.getElementById('chatbot-ticket-form').classList.remove('chatbot-visible');
             // Reset form
