@@ -80,7 +80,7 @@ def create_chatbot():
 @handle_errors
 def get_chatbots():
     try:
-        user_id = session.get('user_id')  # Use .get() instead of direct access
+        user_id = session.get('user_id') 
         if not user_id:
             return jsonify({"error": "Unauthorized"}), 401
             
@@ -134,7 +134,7 @@ def gmail_oauth_callback():
     """
     Handle OAuth callback and store Gmail credentials
     """
-    # Validate state to prevent CSRF
+    
     if 'oauth_state' not in session:
         return jsonify({"error": "Invalid OAuth state"}), 400
 
@@ -329,9 +329,7 @@ def train_chatbot(chatbot_id):
                 current_app.logger.error(f"Error extracting text from URL {website_url}: {str(e)}")
                 return jsonify({"error": f"Error extracting text from URL: {str(e)}"}), 500
         
-        # inventory_data = get_formatted_inventory()
-        # if inventory_data:
-        #     db_data.append({'page': 'inventory', 'text': inventory_data})
+
         
         if not pdf_data and not db_data and not folder_data and not web_data:
             return jsonify({"error": "No data provided. Please upload a file, provide a folder path, provide an API URL, provide a website URL, or ensure MongoDB has data."}), 400
@@ -418,7 +416,7 @@ def get_chatbot(chatbot_id):
 
     chatbot = Chatbot.query.get_or_404(chatbot_id)
     
-    # Ensure the chatbot belongs to the current user
+   
     if chatbot.user_id != user_id:
         return jsonify({"error": "Unauthorized access"}), 403
 
@@ -434,7 +432,7 @@ def get_chatbot(chatbot_id):
 
 @chatbot_bp.route('/chatbot/<chatbot_id>/ask', methods=['POST'])
 def chatbot_ask(chatbot_id):
-    start_time = time()  # Start timing the request
+    start_time = time()  
     
     chatbot = Chatbot.query.get(chatbot_id)
     if not chatbot:
@@ -472,7 +470,7 @@ def chatbot_ask(chatbot_id):
        
         answer = get_general_answer(json.dumps(chatbot_data), question)
         
-        # Calculate processing time
+       
         processing_time = time() - start_time
         
         
@@ -522,115 +520,6 @@ def transcribe_audio_file(file_path):
     return None
 
 
-# @chatbot_bp.route('/chatbot/<chatbot_id>/feedback', methods=['POST', 'OPTIONS'])
-# def submit_feedback(chatbot_id):
-#     if request.method == 'OPTIONS':
-#         return '', 204
-    
-#     chatbot = Chatbot.query.get(chatbot_id)
-#     if not chatbot:
-#         return jsonify({"error": "Chatbot not found"}), 404
-
-#     data = request.json
-#     feedback_text = data.get('feedback')
-#     user_id = request.headers.get('User-ID')  # Retrieve the user ID
-
-#     user_id = data.get('user_id')  # Assume user provides their user_id in the request
-#     if not user_id:
-#         # If no user_id is provided, create a temporary user_id (or a placeholder, like "guest")
-#         user_id = '4269'
-#     if not feedback_text:
-#         return "Feedback is missing", 400
-
-#     if not feedback_text:
-#         return jsonify({"error": "No feedback provided"}), 400
-#     if not user_id:
-#         return jsonify({"error": "User ID is missing"}), 400  # Ensure User-ID is present
-
-#     try:
-#         new_feedback = Feedback(
-#             chatbot_id=chatbot_id,
-#             user_id=user_id,  # Ensure this is an integer or correct type as per your DB schema
-#             feedback=feedback_text,
-#             created_at=datetime.utcnow()
-#         )
-#         db.session.add(new_feedback)
-#         db.session.commit()
-#         return jsonify({"message": "Feedback submitted successfully"}), 200
-#     except SQLAlchemyError as e:
-#         db.session.rollback()
-#         current_app.logger.error(f"Database error in submit_feedback: {str(e)}")
-#         return jsonify({"error": "An error occurred while saving the feedback"}), 500
-
-
-# @chatbot_bp.route('/chatbot/feedback', methods=['POST', 'OPTIONS'])
-# def submit_feedback(chatbot_id):
-#     if request.method == 'OPTIONS':
-#         return '', 204
-        
-#     chatbot = Chatbot.query.get(chatbot_id)
-#     if not chatbot:
-#         return jsonify({"error": "Chatbot not found"}), 404
-        
-#     data = request.json
-#     feedback_text = data.get('feedback')
-#     if not feedback_text:
-#         return jsonify({"error": "No feedback provided"}), 400
-        
-#     # Get user_id from either headers or request data
-#     user_id = request.headers.get('User-ID') or data.get('user_id')
-#     if not user_id:
-#         user_id = '4269'  # Default user_id
-        
-#     try:
-#         new_feedback = Feedback(
-#             chatbot_id=chatbot_id,
-#             user_id=user_id,
-#             feedback=feedback_text,
-#             created_at=datetime.utcnow()
-#         )
-#         db.session.add(new_feedback)
-#         db.session.commit()
-#         return jsonify({"message": "Feedback submitted successfully"}), 200
-#     except SQLAlchemyError as e:
-#         db.session.rollback()
-#         current_app.logger.error(f"Database error in submit_feedback: {str(e)}")
-#         return jsonify({"error": "An error occurred while saving the feedback"}), 500
-
-
-
-
-
-# @chatbot_bp.route('/feedback/<chatbot_id>', methods=['POST'])
-# def create_feedback(chatbot_id):
-#     data = request.json
-    
-#     # Ensure the required fields are present
-#     if not all(field in data for field in ['feedback']):
-#         return jsonify({"error": "Missing required fields"}), 400
-
-#     # Use default user_id like in the ticket route
-#     user_id = data.get('user_id', '4269')
-
-#     # Create the feedback object
-#     new_feedback = Feedback(
-#         user_id=user_id,
-#         chatbot_id=chatbot_id,
-#         feedback=data['feedback'],
-#         created_at=datetime.utcnow()
-#     )
-
-#     try:
-#         db.session.add(new_feedback)
-#         db.session.commit()
-#         return jsonify({
-#             "message": "Feedback created successfully",
-#             "feedback_id": new_feedback.id
-#         }), 201
-#     except SQLAlchemyError as e:
-#         db.session.rollback()
-#         current_app.logger.error(f"Database error in create_feedback: {str(e)}")
-#         return jsonify({"error": "An error occurred while creating the feedback"}), 500
 
 
 
@@ -645,12 +534,12 @@ def submit_feedback(chatbot_id):
 
     data = request.json
     feedback_text = data.get('feedback')
-    # user_id = request.headers.get('User-ID')
+    
     user_id = request.headers.get('User-ID', '4269')  # Retrieve the user ID
 
-    user_id = data.get('user_id')  # Assume user provides their user_id in the request
+    user_id = data.get('user_id')  
     if not user_id:
-        # If no user_id is provided, create a temporary user_id (or a placeholder, like "guest")
+        
         user_id = '4269'
     if not feedback_text:
         return "Feedback is missing", 400
@@ -658,12 +547,12 @@ def submit_feedback(chatbot_id):
     if not feedback_text:
         return jsonify({"error": "No feedback provided"}), 400
     if not user_id:
-        return jsonify({"error": "User ID is missing"}), 400  # Ensure User-ID is present
+        return jsonify({"error": "User ID is missing"}), 400  
 
     try:
         new_feedback = Feedback(
             chatbot_id=chatbot_id,
-            user_id=4269,  # Ensure this is an integer or correct type as per your DB schema
+            user_id=4269,  
             feedback=feedback_text,
             created_at=datetime.utcnow()
         )
@@ -686,10 +575,10 @@ def get_chatbot_feedback(chatbot_id):
     if not chatbot:
         return jsonify({"error": "Chatbot not found"}), 404
     
-    # Query all feedback for the specified chatbot
+    
     feedback_list = Feedback.query.filter_by(chatbot_id=chatbot_id).order_by(desc(Feedback.created_at)).all()
     
-    # Prepare the response data as a string
+    
     feedback_strings = []
     for feedback in feedback_list:
         feedback_str = (
@@ -701,7 +590,7 @@ def get_chatbot_feedback(chatbot_id):
         )
         feedback_strings.append(feedback_str)
     
-    # Join all feedback strings with newlines
+    
     combined_feedback = "\n".join(feedback_strings)
     
     return jsonify({
@@ -716,7 +605,7 @@ def get_chatbot_feedback(chatbot_id):
 
 @chatbot_bp.route('/chatbot/all-feedback', methods=['GET'])
 def get_all_chatbots_feedback():
-    # Query all chatbots
+    
     chatbots = Chatbot.query.all()
     
     if not chatbots:
@@ -729,7 +618,7 @@ def get_all_chatbots_feedback():
         feedback_list = Feedback.query.filter_by(chatbot_id=chatbot.id)\
                               .order_by(desc(Feedback.created_at)).all()
         
-        # Prepare feedback strings for this chatbot
+       
         feedback_strings = []
         for feedback in feedback_list:
             feedback_str = (
@@ -741,7 +630,7 @@ def get_all_chatbots_feedback():
             )
             feedback_strings.append(feedback_str)
         
-        # Add chatbot data to response
+       
         chatbot_data = {
             "chatbot_id": chatbot.id,
             "chatbot_name": chatbot.name,
@@ -753,42 +642,6 @@ def get_all_chatbots_feedback():
         "total_chatbots": len(chatbots),
         "chatbots": response_data
     }), 200
-
-
-
-
-
-
-# @chatbot_bp.route('/get_chatbot_script/<chatbot_id>')
-# @login_required
-# @handle_errors
-# def get_chatbot_script(chatbot_id):
-#     chatbot = Chatbot.query.get(chatbot_id)
-#     if not chatbot:
-#         return jsonify({"error": "Chatbot not found"}), 404
-    
-#     # Generate URLs for the API endpoints
-#     ask_url = url_for('chatbot.chatbot_ask', chatbot_id=chatbot_id, _external=True)
-#     feedback_url = url_for('chatbot.submit_feedback', chatbot_id=chatbot_id, _external=True)
-#     widget_url = url_for('static', filename='js/widget.js', _external=True)
-#     theme_color=""
-#     # ticket_url=url_for('chatbot.create_ticket', chatbot_id=chatbot_id, _external=True )
-    
-#     # Create script tag with the new theme color attribute
-#     integration_code = f'''<!-- you can change the color of the theme used in this chat toggle to be integrated into your website  using hexadecimal color -->
-#     <script 
-#         src="{widget_url}" 
-#         data-chatbot-id="{chatbot_id}" 
-#         data-name="{chatbot.name}" 
-#         data-ask-url="{ask_url}" 
-#         data-feedback-url="{feedback_url}"
-#         data-theme-color="{theme_color}"
-#     ></script>'''
-    
-#     return jsonify({
-#         'integration_code': integration_code,
-#         'preview': integration_code
-#     })
 
 
 
@@ -808,7 +661,7 @@ def get_chatbot_script(chatbot_id):
     theme_color=""
     ticket_url=url_for('chatbot.create_ticket', chatbot_id=chatbot_id, _external=True )
     avatar=""
-    # Create script tag with the new theme color attribute
+   
     integration_code = f'''<!-- you can change the color of the theme used in this chat toggle to be integrated into your website  with hexadecimal color -->
     <!-- you can also change the default image of the avatar used in the chatbot widget by changing the data-avatar variable an image   -->
    <script 
@@ -830,42 +683,7 @@ def get_chatbot_script(chatbot_id):
 
 
 
-#----------------------------------------------------------------
-#   NEW IMPLEMENTATION
-#-----------------------------------------------------------------
 
-# @chatbot_bp.route('/ticket/create/<chatbot_id>', methods=['POST'])
-# def create_ticket(chatbot_id):
-#     data = request.json
-
-#     # Check required fields
-#     if not all(field in data for field in ['subject', 'description', 'account_details']):
-#         return jsonify({"error": "Missing required fields"}), 400
-    
-#     # If the user is not logged in, use a user_id from the request or generate a guest ID
-#     user_id = data.get('user_id')  # Assume user provides their user_id in the request
-#     if not user_id:
-#         # If no user_id is provided, create a temporary user_id (or a placeholder, like "guest")
-#         user_id = 'guest'
-
-#     # Create the ticket object
-#     new_ticket = Ticket(
-#         user_id=user_id,  # Use the provided user_id
-#         chatbot_id=chatbot_id,
-#         subject=data['subject'],
-#         description=data['description'],
-#         priority=data.get('priority', 'medium'),
-#         account_details=data['account_details']
-#     )
-    
-#     # Save the ticket to the database
-#     db.session.add(new_ticket)
-#     db.session.commit()
-    
-#     return jsonify({
-#         "message": "Ticket created successfully",
-#         "ticket_id": new_ticket.id
-#     }), 201
 
 
 @chatbot_bp.route('/ticket/create/<chatbot_id>', methods=['POST'])
@@ -876,7 +694,7 @@ def create_ticket(chatbot_id):
     if not all(field in data for field in ['subject', 'description', 'account_details']):
         return jsonify({"error": "Missing required fields"}), 400
 
-    # Create the ticket with default user_id
+   
     new_ticket = Ticket(
         user_id=4269,  # Always use the default user
         chatbot_id=chatbot_id,
@@ -904,10 +722,9 @@ def create_ticket(chatbot_id):
 @login_required
 @handle_errors
 def list_tickets1(chatbot_id):
-    # Query tickets filtered by chatbot_id
+    
     user_tickets = Ticket.query.filter_by(chatbot_id=chatbot_id).all()
     
-    # Return the filtered tickets
     return jsonify({
         "tickets": [{
             "id": ticket.id,
@@ -923,7 +740,7 @@ def list_tickets1(chatbot_id):
 
 
 @chatbot_bp.route('/tickets', methods=['GET'])
-# @login_required
+@login_required
 def list_tickets():
     
     user_tickets = Ticket.query.all()
@@ -939,8 +756,8 @@ def list_tickets():
 
 
 @chatbot_bp.route('/ticket/<ticket_id>', methods=['GET'])
-# @login_required
-# @handle_errors
+@login_required
+@handle_errors
 def get_ticket(ticket_id):
     ticket = Ticket.query.get_or_404(ticket_id)
     responses = TicketResponse.query.filter_by(ticket_id=ticket_id).all()
@@ -962,22 +779,6 @@ def get_ticket(ticket_id):
             "created_at": response.created_at.isoformat()
         } for response in responses]
     }), 200
-
-
-
-# @chatbot_bp.route('/ticket/<ticket_id>/update-status', methods=['PATCH'])
-# def update_ticket_status(ticket_id):
-#     data = request.json
-#     if 'status' not in data:
-#         return jsonify({"error": "Status is required"}), 400
-    
-#     ticket = Ticket.query.get_or_404(ticket_id)
-#     ticket.status = data['status']
-#     db.session.commit()
-    
-#     return jsonify({"message": "Ticket status updated successfully"}), 200
-
-
 
 
 @chatbot_bp.route('/ticket/<ticket_id>/update-status', methods=['PATCH'])
