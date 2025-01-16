@@ -16,7 +16,7 @@ import logging
 from sqlalchemy import desc
 from models import Chatbot, GmailIntegration,QuestionAnalytics
 from extensions import db
-# Analytics Blueprint
+
 analytics_bp = Blueprint('analytics', __name__)
 
 
@@ -41,14 +41,14 @@ def handle_errors(f):
             return jsonify({"error": "An unexpected error occurred"}), 500
     return decorated_function
 
-# analytics/routes.py
+
 @analytics_bp.route('/analytics/questions/<chatbot_id>', methods=['GET'])
 @login_required
 @handle_errors
 def get_chatbot_analytics(chatbot_id):
     """Get analytics for a specific chatbot"""
     try:
-        # Get optional date range filters from query parameters
+        
         start_date = request.args.get('start_date')
         end_date = request.args.get('end_date')
         
@@ -110,7 +110,7 @@ def get_common_questions(chatbot_id):
             QuestionAnalytics.created_at >= cutoff_date
         ).all()
 
-        # Rest of the function remains the same as it doesn't interact with the metadata/question_metadata field
+        
         question_counter = Counter(q.question for q in questions)
         
         top_questions = []
@@ -144,11 +144,11 @@ def get_common_questions(chatbot_id):
 def get_question_clusters(chatbot_id):
     """Get question clusters by topic"""
     try:
-        # Get timeframe from query parameters (default to last 30 days)
+        
         days = request.args.get('days', 30, type=int)
         cutoff_date = datetime.utcnow() - timedelta(days=days)
 
-        # Get questions from the specified timeframe
+       
         entries = QuestionAnalytics.query.filter(
             QuestionAnalytics.chatbot_id == chatbot_id,
             QuestionAnalytics.created_at >= cutoff_date
@@ -163,7 +163,7 @@ def get_question_clusters(chatbot_id):
                 "current_count": len(questions)
             }), 400
 
-        # Perform clustering
+       
         vectorizer = TfidfVectorizer(max_features=100, stop_words='english')
         vectors = vectorizer.fit_transform(questions)
         
@@ -171,7 +171,6 @@ def get_question_clusters(chatbot_id):
         kmeans = KMeans(n_clusters=n_clusters, random_state=42)
         clusters = kmeans.fit_predict(vectors)
 
-        # Group questions by cluster
         clustered_data = {}
         for idx, cluster_id in enumerate(clusters):
             if cluster_id not in clustered_data:
@@ -182,7 +181,6 @@ def get_question_clusters(chatbot_id):
                 "asked_at": entries[idx].created_at.isoformat()
             })
 
-        # Get topic terms for each cluster
         feature_names = vectorizer.get_feature_names_out()
         clusters_info = []
         for cluster_id, questions_list in clustered_data.items():
@@ -213,11 +211,11 @@ def get_question_clusters(chatbot_id):
 def get_usage_patterns(chatbot_id):
     """Get usage patterns and trends"""
     try:
-        # Get timeframe from query parameters (default to last 30 days)
+        
         days = request.args.get('days', 30, type=int)
         cutoff_date = datetime.utcnow() - timedelta(days=days)
 
-        # Get daily question counts
+        
         daily_counts = db.session.query(
             func.date(QuestionAnalytics.created_at).label('date'),
             func.count(QuestionAnalytics.id).label('count')
@@ -227,7 +225,7 @@ def get_usage_patterns(chatbot_id):
         ).group_by(func.date(QuestionAnalytics.created_at))\
         .order_by('date').all()
 
-        # Get hourly distribution
+       
         hourly_distribution = db.session.query(
             func.extract('hour', QuestionAnalytics.created_at).label('hour'),
             func.count(QuestionAnalytics.id).label('count')
@@ -261,7 +259,7 @@ def get_analytics_dashboard(chatbot_id):
     try:
         days = request.args.get('days', 30, type=int)
         
-        # Get data from all analytics endpoints
+        
         common_questions = get_common_questions(chatbot_id)[0].json
         clusters = get_question_clusters(chatbot_id)[0].json
         usage_patterns = get_usage_patterns(chatbot_id)[0].json
