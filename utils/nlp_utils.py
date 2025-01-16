@@ -30,22 +30,22 @@ huggingface_token = os.getenv('HUGGINGFACE_API_TOKEN')
 
 cohere_token =  os.getenv('COHERE_CLIENT')
 
-# Initialize Cohere client (you'll replace this with your actual API key)
+
 cohere_client = cohere.Client(api_key=cohere_token)
 
 
-# Replace the Cohere client initialization
+
 huggingface_client = InferenceClient(api_key=huggingface_token)
 
 def preprocess_text(text):
-    # The existing preprocessing remains the same
+   
     text = text.lower()
     tokens = word_tokenize(text)
     tokens = [token for token in tokens if token.isalpha()]
     return ' '.join(tokens)
 
 def preprocess_data(pdf_data, folder_data, web_data):
-    # Maintain the existing preprocess_data function structure
+    
     structured_data = []
 
     logging.debug(f"Preprocessing PDF data: {len(pdf_data)} items")
@@ -58,7 +58,7 @@ def preprocess_data(pdf_data, folder_data, web_data):
             sentences = nltk.sent_tokenize(item['text'])
             structured_data.extend([{'type': 'text', 'content': sent, 'source': 'pdf/folder'} for sent in sentences])
 
-    # Process web data (existing logic remains the same)
+    # Process web data 
     if web_data:
         logging.debug(f"Web data keys: {web_data.keys()}")
         if isinstance(web_data, list) and len(web_data) > 0:
@@ -83,79 +83,6 @@ def preprocess_data(pdf_data, folder_data, web_data):
     logging.info(f"Preprocessed data: {len(structured_data)} items")
     return structured_data
 
-
-# def generate_answer(question, relevant_info, max_length=150):
-#     # Combine all relevant information into a single context
-#     context = " ".join(relevant_info)
-    
-#     try:
-#         # Use Cohere's chat generation with web search
-#         response = cohere_client.chat(
-#             model='command-r-plus',
-#             message=f"Context: {context}\n\nQuestion: {question}",
-#             temperature=0.3,
-#             connectors=[{"id": "web-search"}]
-#         )
-        
-#         return response.text
-#     except Exception as e:
-#         logging.error(f"Error generating answer: {str(e)}")
-#         return "I apologize, but I encountered an issue while processing your question."
-
-
-
-# def generate_answer(question, relevant_info, max_length=500):
-#     # Combine all relevant information into a single context
-#     context = " ".join(relevant_info)
-
-#     try:
-       
-#         # messages = [
-#         #     {
-#         #         "role": "system",
-#         #         "content": """You are Alex, a customer service representative who provides brief, helpful responses. Follow these guidelines:
-
-#         # Response Structure:
-#         # - Keep total response under 100 words
-#         # - Use short, clear sentences
-#         # - Focus on answering the immediate question
-#         # - Avoid unnecessary pleasantries and marketing language
-
-#         # Style:
-#         # - Be friendly but direct
-#         # - Use natural, conversational language
-#         # - Answer questions directly before offering additional help
-#         # - Skip lengthy introductions
-
-#         # Format:
-#         # - Greeting: One short line
-#         # - Answer: 2-3 focused sentences
-#         # - Close: One line with clear next step if needed"""
-#         #     },
-#         #     {
-#         #         "role": "user",
-#         #         "content": f"""Context: {context}
-#         # Question: {question}
-
-#         # Provide a concise, helpful response that directly addresses the question."""
-#         #     }
-#         # ]
-
-
-#         # Use Hugging Face's chat completion
-#         response = huggingface_client.chat.completions.create(
-#             model="HuggingFaceH4/zephyr-7b-beta",  # You can change this to another chat model
-#             messages=messages,
-#             temperature=0.1,
-#             max_tokens=500  # Adjust as needed
-#         )
-
-#         # Extract the text from the response
-#         return response.choices[0].message.content
-
-#     except Exception as e:
-#         logging.error(f"Error generating answer: {str(e)}")
-#         return "I apologize, but I encountered an issue while processing your question."
 
 
 
@@ -192,145 +119,7 @@ def get_relevant_passages(question: str, documents: List[str], bm25: BM25Okapi, 
 
 
 
-# def generate_answer(question: str, documents: List[str], max_length: int = 500, context_threshold: int = 4000) -> str:
-#     """
-#     Generate an answer based on the question and context, using passage retrieval only for large contexts.
-    
-#     Args:
-#         question: The question to answer
-#         documents: List of document passages
-#         max_length: Maximum length of the generated answer
-#         context_threshold: Character threshold above which to use passage retrieval
-#     """
-#     try:
-#         # Calculate total context length
-#         total_context_length = sum(len(doc) for doc in documents)
-        
-#         # Determine whether to use passage retrieval
-#         if total_context_length > context_threshold:
-#             # Use BM25 for large contexts
-#             bm25 = prepare_bm25_index(documents)
-#             relevant_info = get_relevant_passages(question, documents, bm25)
-#             context = " ".join(relevant_info)
-#         else:
-#             # Use full context for smaller documents
-#             context = " ".join(documents)
 
-#         # messages = [
-#         #     {"role": "system", "content": "You are a helpful assistant that answers questions based on the given context but you are concise and helpful and answer questions in a friendly manner Start responses directly without phrases like 'Based on, Response..."},
-#         #     {"role": "user", "content": f"Context: {context}\n\nQuestion: {question}"}
-#         # ]
-
-#         print(f"context: {context}")
-#         messages = [
-#         {
-#             "role": "system",
-#             "content": """You are  a customer service representative who provides brief, helpful responses. Follow these guidelines:
-
-#     Response Structure:
-#     - Use short, clear sentences
-#     - Avoid unnecessary pleasantries and marketing language
-
-#     Style:
-#     - Be friendly but direct
-#     - Use natural, conversational language
-#     - Answer questions directly before offering additional help
-#     - Skip lengthy introductions
-
-#         """
-#         },
-#         {
-#             "role": "user",
-#             "content": f"""Context: {context}
-#     Question: {question}
-
-#     Provide a concise, helpful response that directly addresses the question and Important: Only use information from the context above. If you're not sure or if the information isn't in the context, please say so. """
-#         }
-#     ]
-        
-#         response = huggingface_client.chat.completions.create(
-#             model="HuggingFaceH4/zephyr-7b-beta",
-#             messages=messages,
-#             temperature=0.1,
-#             max_tokens=500
-#         )
-        
-#         return response.choices[0].message.content
-    
-#     except Exception as e:
-#         logging.error(f"Error generating answer: {str(e)}")
-#         return "I apologize, but I encountered an issue while processing your question."
-
-
-
-# def generate_answer(question: str, documents: List[str], max_length: int = 500, context_threshold: int = 4000) -> str:
-#     """
-#     Generate an answer based on the question and context, using passage retrieval only for large contexts.
-
-#     Args:
-#         question: The question to answer
-#         documents: List of document passages
-#         max_length: Maximum length of the generated answer
-#         context_threshold: Character threshold above which to use passage retrieval
-#     """
-#     try:
-#         # Calculate total context length
-#         total_context_length = sum(len(doc) for doc in documents)
-
-#         # Determine whether to use passage retrieval
-#         if total_context_length > context_threshold:
-#             # Use BM25 for large contexts
-#             bm25 = prepare_bm25_index(documents)
-#             relevant_info = get_relevant_passages(question, documents, bm25)
-#             context = " ".join(relevant_info)
-#         else:
-#             # Use full context for smaller documents
-#             context = " ".join(documents)
-
-#         # messages = [
-#         #     {"role": "system", "content": "You are a helpful assistant that answers questions based on the given context but you are concise and helpful and answer questions in a friendly manner Start responses directly without phrases like 'Based on, Response..."},
-#         #     {"role": "user", "content": f"Context: {context}\n\nQuestion: {question}"}
-#         # ]
-
-#         print(f"context: {context}")
-#         messages = [
-#         {
-#             "role": "system",
-#             "content": """You are  a customer service representative who provides brief, helpful responses. Follow these guidelines:
-
-#     Response Structure:
-#     - Use short, clear sentences
-#     - Avoid unnecessary pleasantries and marketing language
-
-#     Style:
-#     - Be friendly but direct
-#     - Use natural, conversational language
-#     - Answer questions directly before offering additional help
-#     - Skip lengthy introductions
-
-#         """
-#         },
-#         {
-#             "role": "user",
-#             "content": f"""Context: {context}
-#     Question: {question}
-
-#     Provide a concise, helpful response that directly addresses the question and Important: Only use information from the context above. If you're not sure or if the information isn't in the context, please say so. """
-#         }
-#     ]
-
-#         response = huggingface_client.chat.completions.create(
-#             model="HuggingFaceH4/zephyr-7b-beta",
-#             messages=messages,
-#             temperature=0.1,
-#             max_tokens=500
-#         )
-
-#         return response.choices[0].message.content
-
-#     except Exception as e:
-#         logging.error(f"Error generating answer: {str(e)}")
-#         return "I apologize, but I encountered an issue while processing your question."
 
 
 def generate_answer(question: str, documents: List[str], max_length: int = 500, context_threshold: int = 4000) -> str:
@@ -344,7 +133,7 @@ def generate_answer(question: str, documents: List[str], max_length: int = 500, 
         context_threshold: Character threshold above which to use passage retrieval
     """
     try:
-        # Calculate total context length
+        
         total_context_length = sum(len(doc) for doc in documents)
 
         # Determine whether to use passage retrieval
@@ -404,7 +193,7 @@ Additional Guidance:
 
 def get_general_answer(data, question):
     try:
-        # Process input data (existing logic remains the same)
+        # Process input data 
         chatbot_data = json.loads(data) if isinstance(data, str) else data
         if isinstance(chatbot_data, list) and chatbot_data:
             chatbot_data = chatbot_data[-1]
@@ -412,7 +201,7 @@ def get_general_answer(data, question):
         if not isinstance(chatbot_data, dict):
             raise ValueError("Invalid data format.")
         
-        # Extract data from different sources
+        
         pdf_data = chatbot_data.get('pdf_data', [])
         folder_data = chatbot_data.get('folder_data', [])
         web_data = chatbot_data.get('web_data', {})
@@ -421,9 +210,7 @@ def get_general_answer(data, question):
         structured_data = preprocess_data(pdf_data, folder_data, web_data)
         text_data = [item['content'] for item in structured_data if 'content' in item]
         
-        # # Generate and enhance the answer
-        # answer = generate_answer(question, text_data)
-        # Generate answer
+
         answer = generate_answer(question, text_data)
         
         return answer
@@ -432,17 +219,17 @@ def get_general_answer(data, question):
         logging.error(f"Error processing question: {str(e)}")
         return "I apologize, but I ran into an issue while processing your question. Could you try rephrasing it?"
 
-# Keep other existing functions like split_complex_query and post_process_answer unchanged
+
 
 def preprocess_text(text):
-    # Convert text to lowercase and tokenize
+   
     text = text.lower()
     tokens = word_tokenize(text)
 
-    # Remove stopwords and lemmatize
+    
     tokens = [lemmatizer.lemmatize(token) for token in tokens if token not in stop_words and token.isalpha()]
 
-    # Return the cleaned text
+    
     return ' '.join(tokens)
 
 
