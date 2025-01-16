@@ -49,7 +49,7 @@ def extract_folder_content(folder_path):
 
 
 
-import logging
+
 from urllib.parse import urlparse, urljoin
 import requests
 from bs4 import BeautifulSoup
@@ -60,7 +60,7 @@ import time
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-# Simple storage for ETag and Last-Modified. In production, use a database.
+
 url_cache = {}
 
 def extract_text_from_url(url, max_depth=2, max_pages=100, timeout=500):
@@ -99,7 +99,7 @@ def extract_text_from_url(url, max_depth=2, max_pages=100, timeout=500):
             response = requests.get(url, headers=headers, timeout=10)
             if response.status_code == 304:  # Not Modified
                 logger.info(f"Content of {url} has not changed since last check.")
-                return None  # Return None or cached result
+                return None 
 
             response.raise_for_status()
             soup = BeautifulSoup(response.text, 'html.parser')
@@ -170,7 +170,7 @@ def extract_text_from_url(url, max_depth=2, max_pages=100, timeout=500):
         logger.warning("No content extracted")
         return {'url': url, 'title': '', 'sections': [], 'error': "No content extracted"}
 
-    # Combine results from all crawled pages
+   
     combined_result = results[0]
     for result in results[1:]:
         combined_result['sections'].extend(result['sections'])
@@ -186,81 +186,4 @@ def extract_text_from_url(url, max_depth=2, max_pages=100, timeout=500):
 
 
 
-# import requests
-# from bs4 import BeautifulSoup
-# from urllib.parse import urlparse, urljoin
-# import logging
-# from queue import Queue
-# from concurrent.futures import ThreadPoolExecutor, as_completed
 
-# logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-# logger = logging.getLogger(__name__)
-
-# def scrape_website(start_url, min_depth=3, max_pages=50):
-#     """
-#     Scrape a website starting from the given URL up to specified depth.
-    
-#     Args:
-#         start_url (str): The starting URL to begin scraping from
-#         min_depth (int): Minimum depth to crawl (default: 2)
-#         max_pages (int): Maximum number of pages to scrape (default: 50)
-#     """
-#     visited_urls = set()
-#     results = []
-#     url_queue = Queue()
-#     url_queue.put((start_url, 0))  # (url, current_depth)
-
-#     def process_page(url, depth):
-#         if url in visited_urls or len(visited_urls) >= max_pages:
-#             return None
-        
-#         visited_urls.add(url)
-#         logger.info(f"Processing {url} at depth {depth}")
-        
-#         try:
-#             response = requests.get(url, timeout=10)
-#             response.raise_for_status()
-#             soup = BeautifulSoup(response.text, 'html.parser')
-            
-#             # Extract page content
-#             page_data = {
-#                 'url': url,
-#                 'depth': depth,
-#                 'title': soup.title.string if soup.title else 'No title',
-#                 'text': ' '.join([p.get_text(strip=True) for p in soup.find_all(['p', 'h1', 'h2', 'h3', 'h4', 'li'])])
-#             }
-            
-#             # Find links if we haven't reached max depth
-#             if depth < min_depth:
-#                 base_url = urlparse(url)
-#                 for link in soup.find_all('a', href=True):
-#                     next_url = urljoin(url, link['href'])
-#                     parsed = urlparse(next_url)
-                    
-#                     # Only follow links from the same domain
-#                     if parsed.netloc == base_url.netloc and next_url not in visited_urls:
-#                         url_queue.put((next_url, depth + 1))
-            
-#             return page_data
-            
-#         except Exception as e:
-#             logger.error(f"Error processing {url}: {e}")
-#             return None
-
-#     with ThreadPoolExecutor(max_workers=5) as executor:
-#         futures = set()
-        
-#         while not url_queue.empty() and len(visited_urls) < max_pages:
-#             current_url, current_depth = url_queue.get()
-#             future = executor.submit(process_page, current_url, current_depth)
-#             futures.add(future)
-        
-#         for future in as_completed(futures):
-#             try:
-#                 result = future.result()
-#                 if result:
-#                     results.append(result)
-#             except Exception as e:
-#                 logger.error(f"Error getting result: {e}")
-
-#     return results
