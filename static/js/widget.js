@@ -914,7 +914,7 @@
     // Add event listeners
     document.getElementById('chatbot-toggle').onclick = () => window.chatbotWidget.toggle();
     
-    // Add event listeners
+    
     const input = document.getElementById('chatbot-input');
     const sendButton = document.getElementById('chatbot-send');
     
