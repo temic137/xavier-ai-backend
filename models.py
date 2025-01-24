@@ -36,7 +36,7 @@ class Feedback(db.Model):
 
 class QuestionAnalytics(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    chatbot_id = db.Column(db.String(36), db.ForeignKey('chatbot.id'), nullable=False)
+    chatbot_id = db.Column(db.String(36), db.ForeignKey('chatbot.id', ondelete='CASCADE'), nullable=False)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
     question = db.Column(db.Text, nullable=False)
     answer = db.Column(db.Text, nullable=False)
