@@ -37,7 +37,7 @@ cohere_client = cohere.Client(api_key=cohere_token)
 
 huggingface_client = InferenceClient(api_key=huggingface_token)
 
-groq_client = os.getenv('GROQAPI')
+# groq_client = os.getenv('GROQAPI')
 
 def preprocess_text(text):
    
@@ -124,77 +124,9 @@ def get_relevant_passages(question: str, documents: List[str], bm25: BM25Okapi, 
 
 
 
-# def generate_answer(question: str, documents: List[str], max_length: int = 500, context_threshold: int = 4000) -> str:
-#     """
-#     Generate an answer based on the question and context, using passage retrieval only for large contexts.
-
-#     Args:
-#         question: The question to answer
-#         documents: List of document passages
-#         max_length: Maximum length of the generated answer
-#         context_threshold: Character threshold above which to use passage retrieval
-#     """
-#     try:
-        
-#         total_context_length = sum(len(doc) for doc in documents)
-
-#         # Determine whether to use passage retrieval
-#         if total_context_length > context_threshold:
-#             # Use BM25 for large contexts
-#             bm25 = prepare_bm25_index(documents)
-#             relevant_info = get_relevant_passages(question, documents, bm25)
-#             context = " ".join(relevant_info)
-#         else:
-#             # Use full context for smaller documents
-#             context = " ".join(documents)
-
-#         print(f"context: {context}")
-#         messages = [
-#             {
-#                 "role": "system",
-#                 "content": """You are a customer service representative providing helpful, direct, and concise responses. Follow these guidelines:
-
-# Response Structure:
-# - Do not include the word 'Response:' or similar phrases in your answers
-# - Keep answers short and clear
-# - Focus only on what is necessary to answer the question
-# - Use natural, conversational language
-# - Directly address the question first
-# - Skip unnecessary pleasantries and marketing language
-# - Avoid lengthy introductions, provide answers immediately
-
-# Additional Guidance:
-# - If the information is not found in the context, say 'I'm sorry, I don't have that information.'
-# - If the response requires follow-up or clarification, suggest the next step clearly."""
-
-#             },
-#             {
-#                 "role": "user",
-#                 "content": f"""Context: {context}
-#     Question: {question}
-
-#     Provide a precise and helpful response based on the context above. Only use the information provided. If unsure, say 'I'm sorry, I don't have that information.' Do not include the word 'Response:' in your answer."""
-#             }
-#         ]
-
-#         response = huggingface_client.chat.completions.create(
-#             # model="HuggingFaceH4/zephyr-7b-beta",
-#             model="mistralai/Mistral-7B-Instruct-v0.2",
-#             messages=messages,
-#             temperature=0.0,
-#             max_tokens=500
-#         )
-
-#         return response.choices[0].message.content
-
-#     except Exception as e:
-#         logging.error(f"Error generating answer: {str(e)}")
-#         return "I apologize, but I encountered an issue while processing your question."
-
-
 def generate_answer(question: str, documents: List[str], max_length: int = 500, context_threshold: int = 4000) -> str:
     """
-    Generate an answer based on the question and context using Groq's LLM.
+    Generate an answer based on the question and context, using passage retrieval only for large contexts.
 
     Args:
         question: The question to answer
@@ -203,14 +135,10 @@ def generate_answer(question: str, documents: List[str], max_length: int = 500, 
         context_threshold: Character threshold above which to use passage retrieval
     """
     try:
-        from groq import Groq
-        
-       
-        client = Groq(api_key=groq_client)
         
         total_context_length = sum(len(doc) for doc in documents)
 
-        
+        # Determine whether to use passage retrieval
         if total_context_length > context_threshold:
             # Use BM25 for large contexts
             bm25 = prepare_bm25_index(documents)
@@ -221,12 +149,10 @@ def generate_answer(question: str, documents: List[str], max_length: int = 500, 
             context = " ".join(documents)
 
         print(f"context: {context}")
-        
-        chat_completion = client.chat.completions.create(
-            messages=[
-                {
-                    "role": "system",
-                    "content": """You are a customer service representative providing helpful, direct, and concise responses. Follow these guidelines:
+        messages = [
+            {
+                "role": "system",
+                "content": """You are a customer service representative providing helpful, direct, and concise responses. Follow these guidelines:
 
 Response Structure:
 - Do not include the word 'Response:' or similar phrases in your answers
@@ -240,25 +166,99 @@ Response Structure:
 Additional Guidance:
 - If the information is not found in the context, say 'I'm sorry, I don't have that information.'
 - If the response requires follow-up or clarification, suggest the next step clearly."""
-                },
-                {
-                    "role": "user",
-                    "content": f"""Context: {context}
-Question: {question}
 
-Provide a precise and helpful response based on the context above. Only use the information provided. If unsure, say 'I'm sorry, I don't have that information.' Do not include the word 'Response:' in your answer."""
-                }
-            ],
-            model="llama3-70b-8192",
-            temperature=0.5,
-            max_tokens=max_length
+            },
+            {
+                "role": "user",
+                "content": f"""Context: {context}
+    Question: {question}
+
+    Provide a precise and helpful response based on the context above. Only use the information provided. If unsure, say 'I'm sorry, I don't have that information.' Do not include the word 'Response:' in your answer."""
+            }
+        ]
+
+        response = huggingface_client.chat.completions.create(
+            # model="HuggingFaceH4/zephyr-7b-beta",
+            model="mistralai/Mistral-7B-Instruct-v0.2",
+            messages=messages,
+            temperature=0.0,
+            max_tokens=500
         )
 
-        return chat_completion.choices[0].message.content
+        return response.choices[0].message.content
 
     except Exception as e:
         logging.error(f"Error generating answer: {str(e)}")
         return "I apologize, but I encountered an issue while processing your question."
+
+
+# def generate_answer(question: str, documents: List[str], max_length: int = 500, context_threshold: int = 4000) -> str:
+#     """
+#     Generate an answer based on the question and context using Groq's LLM.
+
+#     Args:
+#         question: The question to answer
+#         documents: List of document passages
+#         max_length: Maximum length of the generated answer
+#         context_threshold: Character threshold above which to use passage retrieval
+#     """
+#     try:
+#         from groq import Groq
+        
+       
+#         client = Groq(api_key=groq_client)
+        
+#         total_context_length = sum(len(doc) for doc in documents)
+
+        
+#         if total_context_length > context_threshold:
+#             # Use BM25 for large contexts
+#             bm25 = prepare_bm25_index(documents)
+#             relevant_info = get_relevant_passages(question, documents, bm25)
+#             context = " ".join(relevant_info)
+#         else:
+#             # Use full context for smaller documents
+#             context = " ".join(documents)
+
+#         print(f"context: {context}")
+        
+#         chat_completion = client.chat.completions.create(
+#             messages=[
+#                 {
+#                     "role": "system",
+#                     "content": """You are a customer service representative providing helpful, direct, and concise responses. Follow these guidelines:
+
+# Response Structure:
+# - Do not include the word 'Response:' or similar phrases in your answers
+# - Keep answers short and clear
+# - Focus only on what is necessary to answer the question
+# - Use natural, conversational language
+# - Directly address the question first
+# - Skip unnecessary pleasantries and marketing language
+# - Avoid lengthy introductions, provide answers immediately
+
+# Additional Guidance:
+# - If the information is not found in the context, say 'I'm sorry, I don't have that information.'
+# - If the response requires follow-up or clarification, suggest the next step clearly."""
+#                 },
+#                 {
+#                     "role": "user",
+#                     "content": f"""Context: {context}
+# Question: {question}
+
+# Provide a precise and helpful response based on the context above. Only use the information provided. If unsure, say 'I'm sorry, I don't have that information.' Do not include the word 'Response:' in your answer."""
+#                 }
+#             ],
+#             model="llama3-70b-8192",
+#             temperature=0.5,
+#             max_tokens=max_length
+#         )
+
+#         return chat_completion.choices[0].message.content
+
+#     except Exception as e:
+#         logging.error(f"Error generating answer: {str(e)}")
+#         return "I apologize, but I encountered an issue while processing your question."
 
 
 
